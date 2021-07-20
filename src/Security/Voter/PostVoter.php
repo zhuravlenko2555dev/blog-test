@@ -11,12 +11,13 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class PostVoter extends Voter
 {
     const EDIT = 'edit';
+    const DELETE = 'delete';
 
     protected function supports(string $attribute, $subject): bool
     {
         // replace with your own logic
         // https://symfony.com/doc/current/security/voters.html
-        return in_array($attribute, [self::EDIT])
+        return in_array($attribute, [self::EDIT, self::DELETE])
             && $subject instanceof \App\Entity\Post;
     }
 
@@ -33,12 +34,21 @@ class PostVoter extends Voter
             case self::EDIT:
                 return $this->canEdit($subject, $user);
                 break;
+            case self::DELETE:
+                return $this->canDelete($subject, $user);
+                break;
         }
 
         return false;
     }
 
     private function canEdit(Post $post, User $user): bool
+    {
+        // this assumes that the Post object has a `getUser()` method
+        return $user === $post->getUser();
+    }
+
+    private function canDelete(Post $post, User $user): bool
     {
         // this assumes that the Post object has a `getUser()` method
         return $user === $post->getUser();
