@@ -19,22 +19,25 @@ class PostRepository extends ServiceEntityRepository
         parent::__construct($registry, Post::class);
     }
 
-    // /**
-    //  * @return Post[] Returns an array of Post objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @return Post[] Returns an array of Post objects
+     */
+    public function findBySearch($q)
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
+        $qb = $this->createQueryBuilder('p');
+        return $qb->innerJoin('p.categories', 'c')
+            ->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('p.title', ':title'),
+                    $qb->expr()->like('c.name', ':title')
+                )
+            )
+            ->setParameter('title', '%'.$q.'%')
             ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
+            ->distinct()
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
     }
-    */
 
     /*
     public function findOneBySomeField($value): ?Post

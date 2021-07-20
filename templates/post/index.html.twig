@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Post index{% endblock %}
+
+{% block body %}
+    <h1>Post index</h1>
+
+    <form action="{{ path('post_index') }}" method="get">
+        <input type="text" name="q" placeholder="Search posts" value="{{ q }}">
+    </form>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Body</th>
+                <th>Author</th>
+                <th>Categories</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for post in posts %}
+            <tr>
+                <td>{{ post.id }}</td>
+                <td>{{ post.title }}</td>
+                <td>{{ post.body }}</td>
+                <td>{{ post.user.name }}</td>
+                <td>
+                    {% for category in post.categories %}
+                        <span class="badge badge-primary">{{ category.name }}</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    <a href="{{ path('post_show', {'id': post.id}) }}">show</a>
+                    {% if is_granted('edit', post) %}
+                        <a href="{{ path('post_edit', {'id': post.id}) }}">edit</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('post_new') }}">Create new</a>
+{% endblock %}
