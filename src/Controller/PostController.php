@@ -4,8 +4,11 @@ namespace App\Controller;
 
 use App\Entity\Post;
 use App\Form\PostType;
+use App\Repository\CategoryRepository;
 use App\Repository\PostRepository;
+use App\Repository\UserRepository;
 use App\Security\Voter\PostVoter;
+use App\Utils\CsvUtils;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,7 +71,7 @@ class PostController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", name="post_show", methods={"GET"})
+     * @Route("/{id}", name="post_show", methods={"GET"}, requirements={"id"="\d+"})
      */
     public function show(Post $post): Response
     {
@@ -78,7 +81,7 @@ class PostController extends AbstractController
     }
 
     /**
-     * @Route("/{id}/edit", name="post_edit", methods={"GET","POST"})
+     * @Route("/{id}/edit", name="post_edit", methods={"GET","POST"}, requirements={"id"="\d+"})
      */
     public function edit(Request $request, Post $post): Response
     {
@@ -102,7 +105,7 @@ class PostController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", name="post_delete", methods={"POST"})
+     * @Route("/{id}", name="post_delete", methods={"POST"}, requirements={"id"="\d+"})
      */
     public function delete(Request $request, Post $post): Response
     {
@@ -113,5 +116,38 @@ class PostController extends AbstractController
         }
 
         return $this->redirectToRoute('post_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * @Route("/export", name="post_export", methods={"GET"})
+     */
+    public function export(PostRepository $postRepository): Response
+    {
+        $csvUtils = new CsvUtils();
+        $postsCsvData = $csvUtils->exportPosts($postRepository);
+
+        $response = new Response();
+        $response->headers->set('Cache-Control', 'private');
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="posts.csv";');
+        $response->headers->set('Content-length',  strlen($postsCsvData));
+
+        $response->sendHeaders();
+        $response->setContent($postsCsvData);
+
+        return $response;
+    }
+
+    /**
+     * @Route("/import", name="post_import", methods={"POST"})
+     */
+    public function import(Request $request, CategoryRepository $categoryRepository, UserRepository $userRepository): Response
+    {
+        $csvUtils = new CsvUtils();
+
+        $postsFile = $request->files->get('posts');
+        $csvUtils->importPosts($postsFile->getPathname(), $this->getDoctrine()->getManager(), $categoryRepository, $userRepository);
+
+        return new RedirectResponse($this->urlGenerator->generate('post_index'));
     }
 }

@@ -9,6 +9,18 @@
         <input type="text" name="q" placeholder="Search posts" value="{{ q }}">
     </form>
 
+    <form action="{{ path('post_import') }}" method="post" enctype="multipart/form-data">
+        <div>
+            <label for="file">Choose a CSV posts file</label>
+            <input type="file" name="posts" accept=".csv">
+        </div>
+        <div>
+            <button>Send</button>
+        </div>
+    </form>
+
+    <a href="{{ path('post_export') }}">Export posts to CSV file</a>
+
     <table class="table">
         <thead>
             <tr>
